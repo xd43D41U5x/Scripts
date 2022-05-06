@@ -20,5 +20,24 @@ Our best bet is to try and catch the reservation of the memory region where this
 The easiest way is to script this and let it do the work for us.  We know we want to monitor HeapAlloc and we know that it will be a sizable memory reservation.  The HeapAlloc function takes size on entry as the 3rd parameter, then has a return value of a pointer to the allocated block of memory.  So lets have our script go through each onEnter value when HeapAlloc is called, check the size and if its not large (ie: program size), ignore it.  However, if its a good size, lets save that memory location that is returned along with the size and watch those for signs of an MZ header (4d 5a 90 00).
 We can use Frida for this as it can hook the program and intercept the calls for HeapAlloc, then monitor our onEnter and onLeave values.  Once we find an item of interest, dump that exact memory region using the base address returned from the function call along with the size passed in.
 
+**Example Output**  
+```
+HeapAlloc called => Size: 0x26f014
+HeapAlloc returned => Address: 0x2396f69e040
 
+HeapAlloc called => Size: 0x40d36c
+HeapAlloc returned => Address: 0x2396fab1040
+
+HeapAlloc called => Size: 0x40d36c
+HeapAlloc returned => Address: 0x2396fec2040
+
+HeapAlloc called => Size: 0x243200
+HeapAlloc returned => Address: 0x239702ec040
+
+HeapAlloc called => Size: 0x243200
+HeapAlloc returned => Address: 0x23970549040
+
+Memory.scan() found match at 0x23970549040 with size 4
+Dumped file: dump_mz116.bin
+```
 
