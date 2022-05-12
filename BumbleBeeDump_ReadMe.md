@@ -1,7 +1,7 @@
 **The Frida Script here is to automatically dump the second stage payload for BumbleBee malware**
 
 **Usage**  
-_python BumbleBeeDump.py "C:\Windows\System32\rundll32.exe" C:\Users\IEUser\Desktop\file\file.dll,SetPath"_
+`python BumbleBeeDump.py "C:\Windows\System32\rundll32.exe" C:\Users\IEUser\Desktop\file\file.dll,SetPath"`
 
 
 **This script/review/research was completely based on the excellent write-up here:**  
