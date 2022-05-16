@@ -200,7 +200,7 @@ def lvl_2():
             posmatches = re.findall('_0x[a-fA-F0-9]+\s\=\s_0x[a-fA-F0-9]+\s\-\s\([-0xa-zA-Z0-9\s\*\+\)]+',line)
             if (posmatches != []):
                 fullmatch.append(posmatches)
-            stringmatch = re.findall('\[\'.{250,}\]\;',line)
+            stringmatch = re.findall('\[\'.{200,}\]\;',line)
             if (stringmatch != []):
                 stringvalue.append(stringmatch)
             whilematch = re.findall('_0x[a-fA-F0-9]+\s\=\s(.?parseInt.+)\;',line)
