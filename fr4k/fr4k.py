@@ -62,9 +62,10 @@ def lvl_1():
             if (whilematch != []):
                 whilevalue.append(whilematch)
 
-    breaktest = open(inputfile, 'r')
-    fullfiletext = breaktest.read()
-    breaktest.close()
+    
+    with open(inputfile,'r') as breaktest:
+        fullfiletext = breaktest.read()
+    
 
     whilebreakmatch = re.findall('shift\'\]\(\)\)\;\s+\}\s+\}\s+\}\s*\(\_0x[a-fA-F0-9]+\,\s(0x[a-fA-F0-9]+)',fullfiletext)
     if (whilebreakmatch != []):
@@ -127,7 +128,6 @@ def lvl_1():
 
     print("\n\n")
 
-    #todo - replace with another path so others can use.
     inputfile2 = "lvl1_template.py"
 
     
@@ -157,10 +157,16 @@ def lvl_1():
 def lvl_2():
     inputfile = input("Please select a file to review: ")
     
-    textfile = open(inputfile, 'r')
-    filetext = textfile.read()
-    textfile.close()
+    with open(inputfile, 'r') as textfile:
+        filetext = textfile.read()
+        
     matches = re.findall('function\s\_0x[a-zA-Z0-9]+.+\n\s+return\s\_0x[a-zA-Z0-9]+\(.+',filetext)
+    
+    #Search for and find the main string shift function before function values are stripped.  
+    stringfunvalue = []
+    stringshiftfun = re.findall('return\s(\_[a-zA-Z0-9]+)[\s\S]*?(?=parseInt)',filetext)
+    if (stringshiftfun != []):
+        stringfunvalue.append(stringshiftfun)
 
     new = []
     importmatch = []
@@ -186,39 +192,38 @@ def lvl_2():
     stringvalue = []
     whilevalue = []
     breakvalue = []
-    stringfunvalue = []
+        
     #Go through the inputfile one line at a time performing regex matching/replace.
     with fileinput.FileInput(inputfile, inplace=False) as file:
         for line in file:
             #Find the full function including the hex chars to convert
-            posmatches = re.findall('_0x[a-fA-F0-9]+\s\=\s_0x[a-fA-F0-9]+\s\-\s(0x[a-fA-F0-9]+)\;',line)
+            posmatches = re.findall('_0x[a-fA-F0-9]+\s\=\s_0x[a-fA-F0-9]+\s\-\s\([-0xa-zA-Z0-9\s\*\+\)]+',line)
             if (posmatches != []):
                 fullmatch.append(posmatches)
-            stringmatch = re.findall('\[\'.{150,}\]\;',line)
+            stringmatch = re.findall('\[\'.{250,}\]\;',line)
             if (stringmatch != []):
                 stringvalue.append(stringmatch)
             whilematch = re.findall('_0x[a-fA-F0-9]+\s\=\s(.?parseInt.+)\;',line)
             if (whilematch != []):
                 whilevalue.append(whilematch)
             stringshiftfun = re.findall('function\s(\_0x[a-fA-F0-9]+)\(.+\s+.+\s+.+\s+\S+\s\=\s\S+\s\-\s0x[a-fA-F0-9]+',line)
-            
-    breaktest = open(inputfile, 'r')
-    fullfiletext = breaktest.read()
-    breaktest.close()
-
-    whilebreakmatch = re.findall('shift\'\]\(\)\)\;\s+\}\s+\}\s+\}\s*\(\_0x[a-fA-F0-9]+\,\s(0x[a-fA-F0-9]+)',fullfiletext)
+        
+    
+    with open(inputfile, 'r') as breaktest:
+        fullfiletext = breaktest.read()
+        
+    whilebreakmatch = re.findall('shift\'\]\(\)\)\;[\s+\}]+\(\_0x[a-fA-F0-9]+\,\s([0xa-fA-F0-9\-\+\s\*]+)',fullfiletext)
     if (whilebreakmatch != []):
         breakvalue.append(whilebreakmatch)
-    stringshiftfun = re.findall('function\s(\_0x[a-fA-F0-9]+)\(.+\s+.+\s+.+\s+\S+\s\=\s\S+\s\-\s0x[a-fA-F0-9]+',fullfiletext)
-    if (stringshiftfun != []):
-        stringfunvalue.append(stringshiftfun)
+    
     
 
     if (len(fullmatch) == 1):
         print("\nOne string pos match found")
         fullmatch = str(fullmatch[0])
-        fullmatch = fullmatch.replace("[","").replace("'","").replace("]","")
-        stringpos = int(fullmatch,16)
+        fullmatch = fullmatch.split("(")[1]
+        fullmatch = fullmatch.replace("[","").replace("'","").replace("]","").replace(")","")
+        stringpos = int(eval(fullmatch))
         print("String POS: %d"% stringpos)
         time.sleep(1)
     else:
@@ -261,7 +266,7 @@ def lvl_2():
         print("One While break value found")
         breakvalue = str(breakvalue[0])
         breakvalue = breakvalue.replace("[","").replace("'","").replace("]","")
-        breakvalue = int(breakvalue,16)
+        breakvalue = int(eval(breakvalue))
         print("While Break Value: %d"% breakvalue)
         time.sleep(1)
     else:
@@ -303,9 +308,9 @@ def lvl_3():
 
     fileres = input("Please select a file to review: ")
     
-    textfile = open(fileres, 'r')
-    filetext = textfile.read()
-    textfile.close()
+    with open(fileres, 'r') as textfile:
+        filetext = textfile.read()
+        
     matches = re.findall('function\s\_0x[a-zA-Z0-9]+.+\n\s+return\s\_0x[a-zA-Z0-9]+\(.+',filetext)
     
     
