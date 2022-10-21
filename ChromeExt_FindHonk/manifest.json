@@ -1,0 +1,33 @@
+{
+    "name": "Honk Finder",
+    "description": "Find the Honk in the page body.",
+    "version": "1.0",
+    "manifest_version": 3,
+
+    "background": {
+        "service_worker": "background.js"
+    },
+
+    "permissions": ["storage", "activeTab", "scripting","tabs","notifications"],
+
+    "host_permissions": ["<all_urls>"],
+
+    "action": {
+        "default_popup": "popup.html",
+
+        "default_icon": {
+            "16": "/images/goose16_dark.png",
+            "32": "/images/goose32_dark.png",
+            "48": "/images/goose48_dark.png",
+            "128": "/images/goose128_dark.png"
+          }
+
+    },
+    "icons": {
+        "16": "/images/goose16_dark.png",
+        "32": "/images/goose32_dark.png",
+        "48": "/images/goose48_dark.png",
+        "128": "/images/goose128_dark.png"
+      }
+
+  }
