@@ -13,16 +13,14 @@ import re
 def xor(data, key):
     l = len(key)
     #standard xor for multibyte key with data
-    out = bytearray(((data[i] ^ key[i % l]) for i in range(0,len(data))))
-    return out
+    return(bytearray(((data[i] ^ key[i % l]) for i in range(0,len(data)))))
 
 def decryptRC4(data,key):
     algorithm = algorithms.ARC4(key)
     cipher = Cipher(algorithm, mode=None)
     decryptor = cipher.decryptor()
     decryptedConfig = decryptor.update(data)
-    formatDecConfig = decryptedConfig.decode('utf-8')
-    return formatDecConfig
+    return(decryptedConfig.decode('utf-8'))
 
 def shellConvert(shell):
     #Convert to hex to look for opcodes
@@ -38,9 +36,11 @@ def shellConvert(shell):
             sys.exit()
         #strip stack push and rebuild
         out = f[2:] + out
-    convBytes = bytes.fromhex(out)
     #return bytes to write to file
-    return convBytes
+    return(bytes.fromhex(out))
+
+def sysCmd(cmd):
+    return(check_output(cmd, shell=True).decode())
 
 def openFile(fileName):
     with open(fileName, "rb") as f:
@@ -62,33 +62,37 @@ fileNameBadger = input("Enter Encrypted Updater file name: ")
 #fileNameDll = 'version.dll'
 #fileNameBadger = 'OneDrive.Update'
 
-
 fileBytesDll = openFile(fileNameDll)
 
-findXORKey = 'strings -10 ' + fileNameDll
-posXORKey = check_output(findXORKey, shell=True).decode()
-try:
-    posXORKey = posXORKey.split('Please wait...\n')[1]
-    posXORKey = posXORKey.split('\n')[0]
-    print(f'Possible XOR key found!\nKey: {posXORKey}')
-except:
-    print(f'No XOR key found, exit...')
-    sys.exit()
+posXORKey = sysCmd('strings -10 ' + fileNameDll)
 
-with open(fileNameBadger, "rb") as f:
-    fileBytesBadger = f.read()
+#Grabbing the XOR key from a known portion of the code.
+posXORKey = posXORKey.split('Please wait...\n')[1]
+posXORKey = posXORKey.split('\n')[0]
+print(f'Possible XOR key found!\nKey: {posXORKey}')
+
+xAnswer = input('Would you like to override this found key? ')
+if (xAnswer.lower() == 'y'):
+    posXORKey = input('Please input new XOR key: ')
+
+
+fileBytesBadger = openFile(fileNameBadger)
 
 bytesKey = str.encode(posXORKey)
+
 xorResults = xor(fileBytesBadger,bytesKey)
 
 shellBytes = shellConvert(xorResults)
 
+#We write out a very close file to the actual dll as currently there are known padding issues.
+#Doesn't matter here but to run it in a debugger it would.
+#At minimum the header would need to be fixed.
+#ToDo, look at padding issue.
 print(f'Writing out dll, remember to fix the MZ header...')
 writeFile('outshell.dll',shellBytes)
 
 #look for config in dll dump
-findConfig = 'strings -50 outshell.dll'
-posConfig = check_output(findConfig, shell=True).decode()
+posConfig = sysCmd('strings -50 outshell.dll')
 
 if(posConfig):
     print(f'Config found proceeding...\nEncoded Config:\n{posConfig}')
@@ -99,12 +103,11 @@ else:
 #b64 decode
 b64Config = base64.b64decode(posConfig)
 
+#Set the standard key found across multiple samples but still look for and prompt as this could change.
 stdRC4Key = 'bYXJm/3#M?:XyMBF'
 
 #Try to confirm RC4 key
-findRC4Key = 'strings -n 16 outShell.dll | sort | uniq -c | sort -rn | head -n 1'
-posRC4Key = check_output(findRC4Key, shell=True).decode()
-
+posRC4Key = sysCmd('strings -n 16 outShell.dll | sort | uniq -c | sort -rn | head -n 1')
 foundRC4Key = posRC4Key.strip().split(' ')[1]
 
 if(foundRC4Key == stdRC4Key):
@@ -113,16 +116,18 @@ if(foundRC4Key == stdRC4Key):
 else:
     newKey = input(f'Key not found, would you still like to attempt the standard key of: {stdRC4Key}? ')
     if(keyAns.lower() == 'n'):
-        newKey = input("What is the new key: ")
+        newKey = input("What is the new key?: ")
         key = str.encode(newKey)
     else:
         print(f'\nUsing default/known key to decrypt.\n')
     
 
+#Dectypt with RC4
 decryptedConfig = decryptRC4(b64Config,key)
 
 print(f'\nThe full decrypted config is: \n{decryptedConfig}\n')
 
+#Format config for easier reading and b64 decode some values.
 decryptedConfig = decryptedConfig.split("|")
 
 print(f'Pretty Print Config:\n')
