@@ -84,10 +84,8 @@ xorResults = xor(fileBytesBadger,bytesKey)
 
 shellBytes = shellConvert(xorResults)
 
-#We write out a very close file to the actual dll as currently there are known padding issues.
-#Doesn't matter here but to run it in a debugger it would.
-#At minimum the header would need to be fixed.
-#ToDo, look at padding issue.
+#The file being written out here seems to vary a bit based on public samples. Sometimes you get an executable with a valid MZ header.
+#Other times you get more shellcode.  Either way the way we find the key and config stays the same for now and works.
 print(f'Writing out dll, remember to fix the MZ header...')
 writeFile('outshell.dll',shellBytes)
 
