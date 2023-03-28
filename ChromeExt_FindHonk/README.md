@@ -1,3 +1,6 @@
+This has now been published to the Chrome store:
+https://chrome.google.com/webstore/detail/honk-finder/pjinnomeaghdpmepokimlhilagmloieh
+
 Custom Chrome Ext to find common website compromises.  
 
 Items it can do now would be to look for: Base64, Hex and Compd.  
