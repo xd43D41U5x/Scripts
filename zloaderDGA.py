@@ -13,13 +13,9 @@ results = []
 for x in range(0x20):
     letters = ''
     for x in range(0x14):
-        timeMain = hex(int(time / 0x19))
-        currChar = int((time % 0x19)) + 0x61
-        timeMain = str(timeMain)[:-2] + str(hex(currChar)).replace('0x','')
+        currChar = (time % 0x19) + 0x61
         letters += chr(currChar)
-        shL = ((int(time) + currChar)<<0x8)&0xffffffff
-        shR = ((int(time) + currChar)>>0x18)&0xFF
-        time = shL | shR
+        time = (((time + currChar)<<0x8)&0xffffffff) | (((time + currChar)>>0x18)&0xff)
     results.append(letters + '.com')
 
 for r in results:
