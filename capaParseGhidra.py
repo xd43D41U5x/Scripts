@@ -1,5 +1,5 @@
 #Capa analysis importer for Ghidra.
-#@author @reb311ion minor updates by d43D41U5
+#@author @reb311ion updates by d43D41U5 for Ghidra v10.1.3
 #@keybinding shift O
 #@category Analysis
 #@toolbar capaexplorer.png
@@ -101,52 +101,62 @@ def get_namespace(namespace, namespace_path):
 def get_match_locations(match_dict):
     matches = []
     if 'locations' in match_dict.keys():
-        return match_dict['locations']
+        if len(match_dict['locations']) > 0:
+            for m in match_dict['locations']:
+                if m['type'] != 'no address':
+                    matches.append(m['value'])
+            return matches
 
     if match_dict['children']:
         for child in match_dict['children']:
             matches += get_match_locations(child)
+               
     return matches
 
 
 def parse_json(data):
     capa_items = []
     capabilities = list(data['rules'].keys())
-    for capability in range (0, len(capabilities)):    
-        Current_capability = capabilities[capability]
-        Current_scope = data['rules'][capabilities[capability]]['meta']['scope']
-        Matches_list = list(data['rules'][capabilities[capability]]['matches'].keys())
+    for capability in range (len(capabilities)):    
+        current_capability = data['rules'][capabilities[capability]]
+        matches_list = current_capability['matches']
+        meta = current_capability['meta']
 
-        if 'namespace' in data['rules'][capabilities[capability]]['meta']:
-            Current_namespace = data['rules'][capabilities[capability]]['meta']['namespace'].replace("/", "::")
+        if 'namespace' in meta:
+            current_namespace = meta['namespace'].replace("/", "::")
         else:
-            Current_namespace = "N/A"
+            current_namespace = "N/A"
         
-        meta = data['rules'][capabilities[capability]]['meta']
-        if not 'lib' in meta.keys() or meta['lib'] == False:
+        if 'lib' not in meta.keys() or meta['lib'] == False:
             addr_list = []
-            for match in data['rules'][capabilities[capability]]['matches'].keys():
-                addr_list += get_match_locations(data['rules'][capabilities[capability]]['matches'][match])
+            for match in matches_list:
+                addr_list += get_match_locations(match[1])
 
             attack = []
-            if "att&ck" in meta.keys():
-                attack = meta['att&ck'] 
-            for match in range (0, len(Matches_list)):
-                item = capa_item(Current_namespace, Current_scope, Current_capability, int(Matches_list[match]), addr_list, attack)
+            if "attack" in meta.keys():
+                attack = meta['attack'] 
+
+            for match in range (len(matches_list)):
+                if 'value' in matches_list[match][0]:
+                    main_function_ref = int(matches_list[match][0]['value'])
+                else:
+                    main_function_ref = None
+                item = capa_item(current_namespace, meta['scopes'], meta['name'], main_function_ref, addr_list, attack)
+                capa_items.append(item)
                 
-            capa_items.append(item)
     return capa_items
 
 
 def capa_place(items):
     for item in items:
         namespace = create_namespace("capa::" + item.namespace)
-        match_function = getFunctionContaining(toAddr(item.match))
-        if match_function:
-            match_function.addTag(item.capability)
-            if item.attack:
-                for tactic in item.attack:
-                    add_bookmark(match_function.getEntryPoint(), tactic, "CapaExplorer - Mitre ATT&CK")
+        if item.match != None:
+        	match_function = getFunctionContaining(toAddr(item.match))
+        	if match_function:
+            		match_function.addTag(item.capability)
+            		if item.attack:
+                		for tactic in item.attack:
+                    			add_bookmark(match_function.getEntryPoint(), tactic, "CapaExplorer - Mitre ATT&CK")
 
         for label in item.label_list:
                 add_bookmark(toAddr(label), item.capability)
@@ -174,4 +184,3 @@ if __name__ == '__main__':
     data = json.loads(data)
     capa_items = parse_json(dict(data))
     capa_place(capa_items)
-
