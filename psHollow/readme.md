@@ -1,1 +1,1 @@
-hold
+POC to mimic a malware tactic to spawn a suspended powershell process with a junk command, read peb to find the proc parameter location in memory, write in the new updated command and then resume the process.
